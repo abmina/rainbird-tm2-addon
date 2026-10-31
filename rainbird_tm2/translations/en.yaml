@@ -1,7 +1,7 @@
 configuration:
   host:
     name: Controller IP address
-    description: Optional - you can find and set the controller from the add-on's web page instead. IP of the LNK WiFi module, e.g. 172.20.0.130. Give it a DHCP reservation.
+    description: Optional - you can find and set the controller from the add-on's web page instead. IP of the LNK WiFi module, e.g. 192.168.1.50. Give it a DHCP reservation.
   password:
     name: Device password
     description: The controller/device password set in the Rain Bird app - not your WiFi password or Rain Bird account login.
@@ -49,4 +49,4 @@ configuration:
     description: Default on. Blocks direct access to port 8099 on your network; the sidebar panel keeps working.
   timezone:
     name: Time zone (optional)
-    description: Time zone the controller clock is kept in, e.g. America/Chicago. Leave empty to use Home Assistant's time zone.
+    description: Time zone the controller clock is kept in, e.g. America/New_York or Europe/London. Leave empty to use Home Assistant's time zone.

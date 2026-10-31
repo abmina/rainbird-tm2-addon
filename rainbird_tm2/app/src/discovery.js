@@ -8,6 +8,7 @@
 // address of the LAN subnet Home Assistant is on - replies come back through NAT.
 const dgram = require('dgram');
 const http = require('http');
+const tls = require('tls');
 const os = require('os');
 
 const PAYLOAD = Buffer.from('RBD-ANDROID');
@@ -68,21 +69,58 @@ function hostSubnets(log) {
   });
 }
 
+/**
+ * Second method that needs no reply port: LNK2/LNK3 modules serve HTTPS with a certificate
+ * issued to *.rainbird.com. Resolves to the certificate name, or null.
+ */
+function tlsProbe(host, port = 443, timeoutMs = 1500) {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    const sock = tls.connect({ host, port, rejectUnauthorized: false, timeout: timeoutMs }, () => {
+      const cert = sock.getPeerCertificate() || {};
+      const names = [cert.subject && cert.subject.CN, cert.issuer && cert.issuer.CN, cert.issuer && cert.issuer.O, cert.subjectaltname].filter(Boolean).join(' ');
+      sock.destroy();
+      finish(/rain\s*bird/i.test(names) ? (cert.subject && cert.subject.CN) || 'Rain Bird' : null);
+    });
+    sock.on('timeout', () => { sock.destroy(); finish(null); });
+    sock.on('error', () => finish(null));
+    setTimeout(() => { sock.destroy(); finish(null); }, timeoutMs + 500);
+  });
+}
+
+async function tlsSweep(hosts, port, found, concurrency = 48) {
+  let i = 0;
+  const worker = async () => {
+    while (i < hosts.length) {
+      const h = hosts[i++];
+      if (found.has(h)) continue;
+      const cn = await tlsProbe(h, port);
+      if (cn) found.set(h, { ...(found.get(h) || { ip: h }), certificate: cn });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, hosts.length) }, worker));
+}
+
 async function discover({ timeoutMs = 4000, log } = {}) {
   // DISCOVERY_TARGETS="host:port,..." replaces everything (used by the tests).
   let targets;
   let scanned = [];
+  let tlsHosts = [];
+  const tlsPort = Number(process.env.DISCOVERY_TLS_PORT) || 443;
   if (process.env.DISCOVERY_TARGETS) {
     targets = process.env.DISCOVERY_TARGETS.split(',').map((t) => t.split(':')).map(([h, p]) => [h, Number(p) || BROADCAST_PORT]);
+    tlsHosts = [...new Set(targets.map(([h]) => h))];
   } else {
     targets = [['255.255.255.255', BROADCAST_PORT]];
     for (const cidr of await hostSubnets(log)) {
       const r = sweepRange(cidr);
       if (!r) continue;
       scanned.push(r.label);
-      for (const h of r.hosts) if (h !== r.self) targets.push([h, BROADCAST_PORT]);
+      for (const h of r.hosts) if (h !== r.self) { targets.push([h, BROADCAST_PORT]); tlsHosts.push(h); }
     }
     scanned = [...new Set(scanned)];
+    tlsHosts = [...new Set(tlsHosts)];
   }
 
   const found = new Map();
@@ -115,9 +153,10 @@ async function discover({ timeoutMs = 4000, log } = {}) {
   await new Promise((r) => setTimeout(r, 500));
   for (const [addr, port] of targets) if (!found.has(addr) && targets.length <= 300) tx.send(PAYLOAD, port, addr, () => {});
 
-  await new Promise((r) => setTimeout(r, timeoutMs));
+  // While waiting for UDP replies, look for Rain Bird HTTPS certificates.
+  await Promise.all([new Promise((r) => setTimeout(r, timeoutMs)), tlsSweep(tlsHosts, tlsPort, found)]);
   for (const s of [tx, rx]) { try { s.close(); } catch {} }
   return { found: [...found.values()], scanned };
 }
 
-module.exports = { discover, sweepRange };
+module.exports = { discover, sweepRange, tlsProbe };

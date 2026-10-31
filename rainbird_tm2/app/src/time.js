@@ -70,7 +70,7 @@ async function resolveTimezone(option, log) {
     if (isValidZone(tz)) return { tz, source };
     log.warn(`Ignoring unknown time zone "${tz}" from ${source}`);
   }
-  log.warn('Could not determine the Home Assistant time zone - assuming UTC and disabling automatic clock sync. Set the "timezone" option (e.g. America/Chicago).');
+  log.warn('Could not determine the Home Assistant time zone - assuming UTC and disabling automatic clock sync. Set the "timezone" option (e.g. America/New_York).');
   return { tz: 'UTC', source: 'fallback' };
 }
 

@@ -481,7 +481,7 @@ $('btnDiscover').addEventListener('click', async (e) => {
   try {
     const r = await act(e.target, () => api('POST', 'api/setup/discover'));
     list.innerHTML = r.found.length
-      ? r.found.map((d) => `<button class="btn" data-ip="${esc(d.ip)}"><span>${esc(d.ip)}</span><span class="muted">${esc(d.mac || d.uuid || 'Rain Bird module')}</span></button>`).join('')
+      ? r.found.map((d) => `<button class="btn" data-ip="${esc(d.ip)}"><span>${esc(d.ip)}</span><span class="muted">${esc(d.mac || d.uuid || (d.certificate ? 'Rain Bird WiFi module' : 'Rain Bird module'))}</span></button>`).join('')
       : `<div class="muted">Nothing answered${r.scanned && r.scanned.length ? ` on ${esc(r.scanned.join(', '))}` : ''}. If the controller is on another network range, enter its IP address from your router's client list instead.</div>`;
   } catch { list.innerHTML = ''; }
 });

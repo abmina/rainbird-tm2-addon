@@ -25,7 +25,7 @@ async function main() {
   const httpPort = 19000 + Math.floor(Math.random() * 1000);
   const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'rbsetup-'));
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'src', 'main.js')], {
-    env: { ...process.env, DATA_DIR: dataDir, HTTP_PORT: String(httpPort), DISCOVERY_TARGETS: `127.0.0.1:${udpPort}`, POLL_SECONDS: '2', REQUEST_SPACING_MS: '5' },
+    env: { ...process.env, DATA_DIR: dataDir, HTTP_PORT: String(httpPort), DISCOVERY_TARGETS: `127.0.0.1:${udpPort}`, DISCOVERY_TLS_PORT: String(port), POLL_SECONDS: '2', REQUEST_SPACING_MS: '5' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let out = '';
@@ -45,7 +45,14 @@ async function main() {
 
     const d = await req('POST', '/api/setup/discover');
     assert.equal(d.status, 200);
-    assert.deepEqual(d.body.found, [{ ip: '127.0.0.1', mac: 'fc:b4:67:60:44:0c' }]);
+    assert.equal(d.body.found.length, 1);
+    assert.equal(d.body.found[0].ip, '127.0.0.1');
+    assert.equal(d.body.found[0].mac, 'fc:b4:67:60:44:0c', 'UDP discovery reply');
+    // a module that never answers the UDP ping is still found by its HTTPS certificate
+    mock.udp.close(); mock.udp = null;
+    const d2 = await req('POST', '/api/setup/discover');
+    assert.equal(d2.body.found.length, 1);
+    assert.equal(d2.body.found[0].certificate, 'fw-cc20.rainbird.com', 'HTTPS certificate check');
 
     let r = await req('POST', '/api/setup/test', { host: '127.0.0.1', port, password: 'wrong' });
     assert.equal(r.status, 400);
