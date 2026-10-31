@@ -60,9 +60,9 @@ function createServer(cfg, app, log) {
     // setup
     ['POST', /^\/api\/setup\/discover$/, async () => {
       log.info('Scanning the network for Rain Bird WiFi modules');
-      const found = await discover({ log });
-      log.info(found.length ? `Found ${found.length} module(s): ${found.map((d) => d.ip).join(', ')}` : 'No modules answered the discovery broadcast');
-      return { found };
+      const { found, scanned } = await discover({ log });
+      log.info(`${found.length ? `Found ${found.length} module(s): ${found.map((d) => d.ip).join(', ')}` : 'No modules answered'}${scanned.length ? ` (scanned ${scanned.join(', ')})` : ''}`);
+      return { found, scanned };
     }],
     ['POST', /^\/api\/setup\/test$/, async (m, b) => {
       const c = checkConn(b);

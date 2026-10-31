@@ -28,9 +28,10 @@ ESP-Me family controllers use the same protocol and should work.
    You can change it later under *Controller → Change controller*. Alternatively set `host` and `password`
    on the add-on's Configuration tab; a controller saved from the web page takes precedence.
 
-The add-on manages **one controller**. The add-on uses host networking so discovery broadcasts reach your
-LAN; its web port (8099) only accepts connections from Home Assistant's ingress unless you turn off
-`ingress_only`.
+The add-on manages **one controller**. It runs isolated on Home Assistant's internal network with an
+AppArmor profile (security rating 8). *Scan network* pings every address of the subnet Home Assistant is on
+(for large subnets, the /24 around Home Assistant's address); if your controller is on a different range,
+enter its IP.
 
 ## Recommended: block the module's internet access
 
