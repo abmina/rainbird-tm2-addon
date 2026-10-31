@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+- Security rating 8 (of 8): the add-on now runs isolated on Home Assistant's internal network
+  (no host networking) and ships a custom AppArmor profile.
+- "Scan network" works without host networking: it pings every address of Home Assistant's
+  subnet (the /24 around it on large networks) and also recognises Rain Bird modules by their
+  HTTPS certificate, so modules that ignore the discovery ping are still found. It reports
+  which range it scanned.
+- Generic examples in the configuration descriptions.
+
 ## 0.1.6
 - Rain delay: +/- update instantly; one request is sent with the final value.
 

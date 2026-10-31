@@ -8,6 +8,10 @@ arch:
   - amd64
 init: false
 ingress: true
+ports:
+  33668/udp: 33668
+ports_description:
+  33668/udp: Replies to the Rain Bird discovery ping (only used by Scan network)
 panel_icon: mdi:sprinkler-variant
 panel_title: Rain Bird
 services:
