@@ -1,7 +1,7 @@
 # Rain Bird ESP-TM2 for Home Assistant (local)
 
-**Full local control of Rain Bird ESP-TM2 sprinkler controllers - no Rain Bird cloud, no app, no waiting.**
-A Home Assistant add-on with its own sidebar page (like Zigbee2MQTT) that lets you edit your watering
+**Full local control of Rain Bird ESP-TM2 sprinkler controllers - no Rain Bird cloud, no phone app, no waiting.**
+A Home Assistant app with its own sidebar page (like Zigbee2MQTT) that lets you edit your watering
 programs, and MQTT entities for your dashboards and automations.
 
 [![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
@@ -15,9 +15,9 @@ programs, and MQTT entities for your dashboards and automations.
 
 ## Why
 
-The Rain Bird app sends every tap through Rain Bird's servers, and it is slow. The built-in Home Assistant
+The Rain Bird phone app sends every tap through Rain Bird's servers, and it is slow. The built-in Home Assistant
 integration is local, but it can only run zones and set a rain delay - you can't see or change your
-programs. This add-on talks directly to the controller's WiFi module on your network and does both.
+programs. This Home Assistant app talks directly to the controller's WiFi module on your network and does both.
 
 ## Features
 
@@ -49,31 +49,33 @@ programs. This add-on talks directly to the controller's WiFi module on your net
 | ESP-RZXe, ST8x-WiFi | `0003`, `0006`, `0008` | ❌ Different (per-zone) scheduling - not supported yet |
 
 Needs the Rain Bird **LNK, LNK2 or LNK3** WiFi module plugged into the controller, and Home Assistant
-**OS or Supervised** (anything with the add-on store).
+**OS or Supervised** (anything with the Apps page).
 
 **Have a 🟡 controller?** Please [report how it went](https://github.com/abmina/rainbird-tm2-addon/issues/new?template=device_report.yml) -
 even "it works" helps others.
 
 ## Install
 
-1. Click **Add repository to Home Assistant** above, or go to *Settings → Add-ons → Add-on store → ⋮ →
-   Repositories* and add `https://github.com/abmina/rainbird-tm2-addon`.
+1. Click **Add repository to Home Assistant** above, or go to *Settings → Apps → Install app → ⋮ (top right) → Repositories → Add* and enter `https://github.com/abmina/rainbird-tm2-addon`.
 2. Install **Rain Bird ESP-TM2**, start it, and turn on *Show in sidebar*.
+
+   > On older Home Assistant versions, apps are called **add-ons**: *Settings → Add-ons → Add-on store →
+   > ⋮ → Repositories*.
 3. Open **Rain Bird** in the sidebar, click **Scan network**, pick your controller and enter its
-   **device password** - the controller password set in the Rain Bird app (not your WiFi or Rain Bird
+   **device password** - the controller password set in the Rain Bird phone app (not your WiFi or Rain Bird
    account password).
 
-For Home Assistant entities, install the **Mosquitto broker** add-on and the **MQTT** integration; the
-add-on finds them automatically.
+For Home Assistant entities, install the **Mosquitto broker** app and the **MQTT** integration; the
+app finds them automatically.
 
 ### Recommended
 
-- **Block the WiFi module's internet access** on your router (keep LAN access). The add-on never needs it,
+- **Block the WiFi module's internet access** on your router (keep LAN access). The app never needs it,
   and the module is faster and more reliable without its cloud syncing.
 - **Don't migrate to the "Rain Bird 2.0" app/firmware** if it is offered - it moves the controller to a
   cloud platform and local access stops working.
 
-Full documentation is on the add-on's **Documentation** tab ([DOCS.md](rainbird_tm2/DOCS.md)).
+Full documentation is on the app's **Documentation** tab ([DOCS.md](rainbird_tm2/DOCS.md)).
 
 ## Home Assistant entities
 
@@ -100,17 +102,17 @@ data:
 
 ## FAQ
 
-**Does it replace the Rain Bird app?** For everything at home, yes. The phone app keeps working on your home
+**Does it replace the Rain Bird phone app?** For everything at home, yes. The phone app keeps working on your home
 WiFi (the module allows one connection at a time, so avoid using both at the same moment).
 
 **Can I use it with the built-in Rain Bird integration?** Yes, but both poll the same module - removing the
 built-in integration avoids slow responses.
 
-**Is my schedule stored in the add-on?** No. Programs live on the controller; the add-on only reads and writes
+**Is my schedule stored in the app?** No. Programs live on the controller; the app only reads and writes
 them. If Home Assistant is down, the controller keeps watering on schedule.
 
 **Something isn't working.** Open an [issue](https://github.com/abmina/rainbird-tm2-addon/issues/new/choose)
-with the add-on log and the *Controller → Scan supported commands* output.
+with the app log and the *Controller → Scan supported commands* output.
 
 ## Development
 

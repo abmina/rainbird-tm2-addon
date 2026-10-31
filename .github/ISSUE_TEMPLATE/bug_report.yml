@@ -1,12 +1,12 @@
 name: Bug report
-description: Something in the add-on doesn't work as expected
+description: Something in the app doesn't work as expected
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for reporting! The details below let us reproduce the problem without guessing.
-        Please remove passwords before pasting logs (the add-on never logs your device password).
+        Please remove passwords before pasting logs (the app never logs your device password).
   - type: textarea
     id: what
     attributes:
@@ -17,7 +17,7 @@ body:
   - type: input
     id: addon_version
     attributes:
-      label: Add-on version
+      label: App version
       placeholder: "0.2.0"
     validations:
       required: true
@@ -43,8 +43,8 @@ body:
   - type: textarea
     id: log
     attributes:
-      label: Add-on log
-      description: "Settings → Add-ons → Rain Bird ESP-TM2 → Log. For protocol problems set log_level: debug first."
+      label: App log
+      description: "Settings → Apps → Rain Bird ESP-TM2 → Log. For protocol problems set log_level: debug first."
       render: text
   - type: textarea
     id: diagnostics
