@@ -4,7 +4,7 @@
 A Home Assistant app with its own sidebar page (like Zigbee2MQTT) that lets you edit your watering
 programs, and MQTT entities for your dashboards and automations.
 
-[![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
+[![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?app=d2c74719_rainbird_tm2&repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
 
 [![Release](https://img.shields.io/github/v/release/abmina/rainbird-tm2-addon?sort=semver)](https://github.com/abmina/rainbird-tm2-addon/releases)
 [![Tests](https://github.com/abmina/rainbird-tm2-addon/actions/workflows/test.yaml/badge.svg)](https://github.com/abmina/rainbird-tm2-addon/actions/workflows/test.yaml)
@@ -56,8 +56,13 @@ even "it works" helps others.
 
 ## Install
 
-1. Click **Add repository to Home Assistant** above, or go to *Settings → Apps → Install app → ⋮ (top right) → Repositories → Add* and enter `https://github.com/abmina/rainbird-tm2-addon`.
-2. Install **Rain Bird ESP-TM2**, start it, and turn on *Show in sidebar*.
+1. Click this button - it adds the repository to your Home Assistant (if needed) and opens the app:
+
+   [![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?app=d2c74719_rainbird_tm2&repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
+
+   Or add it by hand: *Settings → Apps → Install app → ⋮ (top right) → Repositories → Add* and enter
+   `https://github.com/abmina/rainbird-tm2-addon`, then find **Rain Bird ESP-TM2** in the list.
+2. Click **Install**, then **Start**, and turn on *Show in sidebar*.
 
    > On older Home Assistant versions, apps are called **add-ons**: *Settings → Add-ons → Add-on store →
    > ⋮ → Repositories*.
