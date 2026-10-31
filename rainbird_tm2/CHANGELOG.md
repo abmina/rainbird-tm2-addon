@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.4
+## 0.1.5
 - Much faster: one HTTPS connection is reused for bursts of requests instead of a new TLS
   handshake per request (closed after 3 s idle so the Rain Bird app can still connect).
 - Faster verified schedule writes: each page is read back right after writing, then one final
