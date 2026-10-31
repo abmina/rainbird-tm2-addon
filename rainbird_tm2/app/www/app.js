@@ -141,8 +141,7 @@ setInterval(tick, 1000);
 
 function renderStats() {
   const st = S.status;
-  $('rainDelay').textContent = st.rainDelay;
-  $('rainDelayFoot').textContent = st.rainDelay ? `Watering resumes in ${st.rainDelay} day${st.rainDelay === 1 ? '' : 's'}` : 'Pauses all programs';
+  renderRainDelay();
   const bypass = S.schedule && S.schedule.global.rainSensorBypass;
   $('rainSensor').textContent = st.rainSensor ? 'Wet' : 'Dry';
   $('rainSensorFoot').textContent = bypass ? 'Bypassed - controller ignores it' : st.rainSensor ? 'Programs are suspended' : 'Watering allowed';
@@ -356,11 +355,53 @@ $('btnClear').addEventListener('click', async (e) => {
 // ------------------------------------------------------------------ overview actions
 $('btnStop').addEventListener('click', (e) => act(e.target, () => api('POST', 'api/stop'), 'Stopped'));
 $('btnAdvance').addEventListener('click', (e) => act(e.target, () => api('POST', 'api/advance'), 'Advanced'));
+// Rain delay: +/- change the number on the page immediately; one request with the final value
+// is sent once the user stops clicking for a moment.
+let delayPending = null; // value chosen on the page but not yet confirmed by the controller
+let delayTimer = null;
+let delaySending = false;
+function renderRainDelay() {
+  const actual = S.status.rainDelay;
+  if (delayPending !== null && !delayTimer && !delaySending && actual === delayPending) delayPending = null; // confirmed
+  const shown = delayPending ?? actual;
+  $('rainDelay').textContent = shown;
+  const foot = $('rainDelayFoot');
+  if (delayPending !== null) {
+    foot.textContent = delaySending ? 'Sending to controller…' : `Will set to ${shown} day${shown === 1 ? '' : 's'}…`;
+  } else {
+    foot.textContent = actual ? `Watering resumes in ${actual} day${actual === 1 ? '' : 's'}` : 'Pauses all programs';
+  }
+}
+async function sendRainDelay() {
+  delayTimer = null;
+  const days = delayPending;
+  if (days === null) return;
+  if (days === S.status.rainDelay) { delayPending = null; renderRainDelay(); return; }
+  delaySending = true;
+  renderRainDelay();
+  try {
+    await api('POST', 'api/rain-delay', { days });
+    S.status.rainDelay = days;
+    toast(days ? `Rain delay set to ${days} day${days === 1 ? '' : 's'}` : 'Rain delay cleared');
+  } catch (e) {
+    toast(e.message, true);
+  } finally {
+    delaySending = false;
+    if (delayPending === days) delayPending = null; // otherwise the user changed it again meanwhile
+    renderRainDelay();
+    if (delayPending !== null && !delayTimer) delayTimer = setTimeout(sendRainDelay, 1000);
+  }
+}
 document.querySelectorAll('[data-delay]').forEach((b) => b.addEventListener('click', () => {
-  const days = Math.max(0, Math.min(14, S.status.rainDelay + Number(b.dataset.delay)));
-  if (days === S.status.rainDelay) return;
-  act(b, () => api('POST', 'api/rain-delay', { days }), days ? `Rain delay ${days} day${days === 1 ? '' : 's'}` : 'Rain delay cleared');
+  const current = delayPending ?? S.status.rainDelay;
+  const days = Math.max(0, Math.min(14, current + Number(b.dataset.delay)));
+  if (days === current) return;
+  delayPending = days;
+  clearTimeout(delayTimer);
+  delayTimer = delaySending ? null : setTimeout(sendRainDelay, 1000);
+  renderRainDelay();
 }));
+
 $('programSummary').addEventListener('click', (e) => {
   const ed = e.target.closest('[data-edit]');
   if (ed) { current = ed.dataset.edit; document.querySelector('.tab[data-tab="programs"]').click(); renderProgramSeg(); renderEditor(); }
