@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.6
+- Rain delay: +/- update instantly; one request is sent with the final value.
+
 ## 0.1.5
 - Much faster: one HTTPS connection is reused for bursts of requests instead of a new TLS
   handshake per request (closed after 3 s idle so the Rain Bird app can still connect).
