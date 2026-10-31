@@ -1,7 +1,7 @@
 configuration:
   host:
     name: Controller IP address
-    description: Optional - you can find and set the controller from the add-on's web page instead. IP of the LNK WiFi module, e.g. 192.168.1.50. Give it a DHCP reservation.
+    description: Optional - you can find and set the controller from the app's web page instead. IP of the LNK WiFi module, e.g. 192.168.1.50. Give it a DHCP reservation.
   password:
     name: Device password
     description: The controller/device password set in the Rain Bird app - not your WiFi password or Rain Bird account login.
@@ -31,7 +31,7 @@ configuration:
     name: Allow schedule changes while watering
   mqtt_host:
     name: MQTT host (optional)
-    description: Leave empty to use the Mosquitto add-on / MQTT integration automatically.
+    description: Leave empty to use the Mosquitto app / MQTT integration automatically.
   mqtt_port:
     name: MQTT port
   mqtt_username:

@@ -440,7 +440,7 @@ function renderController() {
   if (document.activeElement !== $('stationDelay')) $('stationDelay').value = g.stationDelaySeconds ?? 0;
   const st = S.status;
   $('clockInfo').textContent = `Controller: ${st.controllerTime.replace('T', ' ')} · drift ${st.clockDriftSeconds}s · time zone ${st.timezone || '?'}`;
-  $('connInfo').textContent = `${S.setup.host} · set in ${S.setup.source === 'web' ? 'this web UI' : 'the add-on configuration'}`;
+  $('connInfo').textContent = `${S.setup.host} · set in ${S.setup.source === 'web' ? 'this web UI' : 'the app configuration'}`;
   const i = S.info || {};
   const w = i.wifi || {};
   const rows = [
@@ -497,7 +497,7 @@ async function setupCall(btn, path) {
   btn.disabled = true;
   try {
     const r = await api('POST', path, { host: $('setupHost').value.trim(), password: $('setupPw').value });
-    setupMsg(`Found ${r.model} (${r.modelId}) with ${r.zones.length} zones over ${String(r.scheme).toUpperCase()}${r.family === 'tm2' || r.family === 'me' ? '' : ' - note: this add-on is built for the ESP-TM2 / ESP-Me family'}.`, 'ok');
+    setupMsg(`Found ${r.model} (${r.modelId}) with ${r.zones.length} zones over ${String(r.scheme).toUpperCase()}${r.family === 'tm2' || r.family === 'me' ? '' : ' - note: this app is built for the ESP-TM2 / ESP-Me family'}.`, 'ok');
     return r;
   } catch (err) {
     setupMsg(err.message, 'err');
@@ -542,7 +542,7 @@ function connect() {
   });
   es.onerror = () => {
     $('conn').className = 'conn offline';
-    $('connText').textContent = 'Add-on unreachable';
+    $('connText').textContent = 'App unreachable';
   };
 }
 connect();

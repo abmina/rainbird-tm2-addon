@@ -15,9 +15,9 @@ ESP-Me family controllers use the same protocol and should work.
 ## Setup
 
 1. Give the WiFi module a DHCP reservation so its IP never changes.
-2. Install the **Mosquitto broker** add-on and the **MQTT** integration if you don't have them
+2. Install the **Mosquitto broker** app and the **MQTT** integration if you don't have them
    (optional - without MQTT you still get the web UI).
-3. Start the add-on and open **Rain Bird** in the sidebar. The first time, you get a setup screen:
+3. Start the app and open **Rain Bird** in the sidebar. The first time, you get a setup screen:
    - **Scan network** broadcasts the same discovery ping the Rain Bird app uses and lists the modules that
      answer - click one to fill in its IP. (Some routers/VLANs block broadcasts; then type the IP from
      your router's client list.)
@@ -26,9 +26,9 @@ ESP-Me family controllers use the same protocol and should work.
    - **Test connection** shows the model and zone count; **Save and connect** stores it and starts.
 
    You can change it later under *Controller → Change controller*. Alternatively set `host` and `password`
-   on the add-on's Configuration tab; a controller saved from the web page takes precedence.
+   on the app's Configuration tab; a controller saved from the web page takes precedence.
 
-The add-on manages **one controller**. It runs isolated on Home Assistant's internal network with an
+The app manages **one controller**. It runs isolated on Home Assistant's internal network with an
 AppArmor profile (security rating 8). *Scan network* pings every address of the subnet Home Assistant is on
 (for large subnets, the /24 around Home Assistant's address); if your controller is on a different range,
 enter its IP.
@@ -38,14 +38,14 @@ enter its IP.
 On your router/firewall, block outbound internet for the module's IP while keeping LAN access.
 Other ESP-TM2 users found local control much more reliable this way: the module stops spending its
 limited capacity on cloud syncs. The Rain Bird phone app will then only work on your home WiFi (or not at
-all) - use this add-on instead.
+all) - use this app instead.
 
 **Do not migrate to the "Rain Bird 2.0" app / firmware** if it is offered. It moves the controller to the
 IQ4 cloud and local access stops working.
 
 ## Things to know
 
-- **One connection at a time.** The module serves a single request at a time. The add-on queues and paces
+- **One connection at a time.** The module serves a single request at a time. The app queues and paces
   everything, but if the Rain Bird phone app is open at the same moment, commands will be slow or retried.
 - **Schedule writes are verified.** Each change is written one page at a time, then every schedule page is read
   back. If anything other than the intended page changed, the change is rolled back and you get an error.
@@ -55,7 +55,7 @@ IQ4 cloud and local access stops working.
 - **Manual zone runs are 1-255 minutes** (protocol limit for manual runs). Program run times go up to 360.
 - Changes made at the controller's own buttons are picked up on the next schedule refresh
   (`schedule_refresh_minutes`), or immediately with *Refresh* on the Controller tab.
-- *Next scheduled run* is calculated by the add-on from the programs, rain delay and controller clock. It
+- *Next scheduled run* is calculated by the app from the programs, rain delay and controller clock. It
   does not account for the rain sensor.
 
 ## Home Assistant entities
@@ -63,7 +63,7 @@ IQ4 cloud and local access stops working.
 | Entity | What it does |
 |---|---|
 | `switch` per zone | On = run for that zone's default run time, Off = stop |
-| `number` *Zone run time* per zone | Default minutes for the zone switch (stored in the add-on) |
+| `number` *Zone run time* per zone | Default minutes for the zone switch (stored in the app) |
 | `button` *Start program A/B/C* | Runs a program now |
 | `sensor` *Program A/B/C* | Summary text; full schedule in the attributes |
 | `number` *Program X seasonal adjust* | 0-200 %, written to the controller |
@@ -107,7 +107,7 @@ data:
   one in the Rain Bird app.
 - **Unreachable / timeouts** - check the IP, that the phone app is closed, and raise `poll_interval`.
 - The *Controller* tab has a command-support scan and a raw dump of the schedule pages; include it in any
-  bug report together with the add-on log (set `log_level: debug` for SIP-level traces).
+  bug report together with the app log (set `log_level: debug` for SIP-level traces).
 
 ## Credits
 
