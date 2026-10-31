@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in the add-on doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! The details below let us reproduce the problem without guessing.
+        Please remove passwords before pasting logs (the add-on never logs your device password).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: addon_version
+    attributes:
+      label: Add-on version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Controller model and model ID
+      description: "Controller tab → Device → Model, e.g. ESP-TM2 (010A)"
+      placeholder: "ESP-TM2 (010A)"
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Controller firmware and WiFi module
+      description: "Controller tab → Device → Firmware and WiFi module"
+      placeholder: "2.10.0 · Rain Bird LNK3-0.3.97.0/3.97"
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.10.3"
+  - type: textarea
+    id: log
+    attributes:
+      label: Add-on log
+      description: "Settings → Add-ons → Rain Bird ESP-TM2 → Log. For protocol problems set log_level: debug first."
+      render: text
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics (optional)
+      description: "Controller tab → Scan supported commands, then paste the result."
+      render: text

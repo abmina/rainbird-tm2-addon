@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like the add-on to do?
+      description: Describe the problem you're trying to solve, not only the solution.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Your controller model
+      placeholder: "ESP-TM2 (010A)"

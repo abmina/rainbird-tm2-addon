@@ -1,0 +1,50 @@
+name: Device compatibility report
+description: Tell us how the add-on works with your Rain Bird controller - "it works" helps too!
+labels: [device-report]
+title: "Device report: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This helps us grow the supported-devices list. Close the Rain Bird phone app while testing -
+        the WiFi module only accepts one connection at a time.
+  - type: input
+    id: model
+    attributes:
+      label: Controller model and model ID
+      description: "Controller tab → Device → Model"
+      placeholder: "ESP-ME3 (0009)"
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Controller firmware and WiFi module
+      placeholder: "4.1.0 · Rain Bird LNK2-..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: works
+    attributes:
+      label: What works?
+      options:
+        - label: Connects and shows status
+        - label: Scan network finds the controller
+        - label: Running a zone / stopping
+        - label: Starting a program
+        - label: Programs are shown correctly (compare with the controller's display)
+        - label: Saving a program change (try an empty program first)
+        - label: Rain delay
+        - label: Home Assistant entities
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything that didn't work or looked wrong?
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: "Controller tab → Scan supported commands, then paste the full result (includes the schedule pages)."
+      render: text
+    validations:
+      required: true
