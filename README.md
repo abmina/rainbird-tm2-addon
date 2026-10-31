@@ -4,7 +4,7 @@ Local, cloud-free control of a Rain Bird ESP-TM2 through its LNK WiFi module, wi
 (full program editor) and Home Assistant entities via MQTT discovery. See
 [`rainbird_tm2/DOCS.md`](rainbird_tm2/DOCS.md) for setup and usage.
 
-[![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FYOUR_GITHUB_USER%2Frainbird-tm2-addon)
+[![Add repository to Home Assistant](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
 
 > Not affiliated with or endorsed by Rain Bird Corporation. Use at your own risk - this talks to your
 > irrigation controller using a reverse-engineered protocol.
@@ -14,7 +14,7 @@ Local, cloud-free control of a Rain Bird ESP-TM2 through its LNK WiFi module, wi
 **From this repository (recommended):**
 
 1. Click the button above, or in Home Assistant go to *Settings → Add-ons → Add-on store → ⋮ →
-   Repositories* and add `https://github.com/YOUR_GITHUB_USER/rainbird-tm2-addon`.
+   Repositories* and add `https://github.com/abmina/rainbird-tm2-addon`.
 2. Find **Rain Bird ESP-TM2** in the store, install, start, and open **Rain Bird** in the sidebar.
 
 Requires Home Assistant OS or Supervised (anything with the Add-on store). Tested with an ESP-TM2
