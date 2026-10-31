@@ -1,0 +1,52 @@
+configuration:
+  host:
+    name: Controller IP address
+    description: Optional - you can find and set the controller from the add-on's web page instead. IP of the LNK WiFi module, e.g. 172.20.0.130. Give it a DHCP reservation.
+  password:
+    name: Device password
+    description: The controller/device password set in the Rain Bird app - not your WiFi password or Rain Bird account login.
+  poll_interval:
+    name: Poll interval (seconds)
+    description: How often to read status while idle. The module is fragile; don't go below 15.
+  watering_poll_interval:
+    name: Poll interval while watering (seconds)
+  schedule_refresh_minutes:
+    name: Schedule refresh (minutes)
+    description: How often to re-read the programs, to pick up changes made at the controller itself.
+  default_run_minutes:
+    name: Default manual run time (minutes)
+  auto_sync_clock:
+    name: Keep controller clock in sync
+    description: Set the controller clock from Home Assistant when it drifts more than 90 seconds (at most every 6 hours).
+  device_name:
+    name: Device name in Home Assistant
+  log_level:
+    name: Log level
+  scheme:
+    name: Transport
+    description: auto tries HTTPS then HTTP. Newer LNK firmware is HTTPS-only.
+  request_spacing_ms:
+    name: Minimum gap between requests (ms)
+  allow_writes_while_watering:
+    name: Allow schedule changes while watering
+  mqtt_host:
+    name: MQTT host (optional)
+    description: Leave empty to use the Mosquitto add-on / MQTT integration automatically.
+  mqtt_port:
+    name: MQTT port
+  mqtt_username:
+    name: MQTT username
+  mqtt_password:
+    name: MQTT password
+  mqtt_ssl:
+    name: MQTT over TLS
+  mqtt_base_topic:
+    name: MQTT base topic
+  discovery_prefix:
+    name: Home Assistant discovery prefix
+  ingress_only:
+    name: Web UI through Home Assistant only
+    description: Default on. Blocks direct access to port 8099 on your network; the sidebar panel keeps working.
+  timezone:
+    name: Time zone (optional)
+    description: Time zone the controller clock is kept in, e.g. America/Chicago. Leave empty to use Home Assistant's time zone.

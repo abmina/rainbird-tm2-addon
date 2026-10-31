@@ -1,0 +1,55 @@
+name: Rain Bird ESP-TM2
+version: "0.1.2"
+slug: rainbird_tm2
+description: Local control of a Rain Bird ESP-TM2 through its LNK WiFi module - full schedule editing, web UI and MQTT entities
+url: https://github.com/YOUR_GITHUB_USER/rainbird-tm2-addon
+arch:
+  - aarch64
+  - amd64
+  - armv7
+init: false
+startup: application
+boot: auto
+ingress: true
+# host network lets the setup screen broadcast-discover the WiFi module on your LAN
+host_network: true
+ingress_port: 8099
+panel_icon: mdi:sprinkler-variant
+panel_title: Rain Bird
+services:
+  - mqtt:want
+# hassio_api is used only to read Home Assistant's time zone
+hassio_api: true
+homeassistant_api: false
+options:
+  host: ""
+  password: ""
+  poll_interval: 30
+  watering_poll_interval: 5
+  schedule_refresh_minutes: 30
+  default_run_minutes: 10
+  auto_sync_clock: true
+  device_name: Rain Bird
+  log_level: info
+schema:
+  host: str?
+  password: password?
+  poll_interval: int(10,600)
+  watering_poll_interval: int(2,60)
+  schedule_refresh_minutes: int(5,1440)
+  default_run_minutes: int(1,255)
+  auto_sync_clock: bool
+  device_name: str
+  log_level: list(debug|info|warn|error)
+  scheme: list(auto|https|http)?
+  request_spacing_ms: int(100,5000)?
+  allow_writes_while_watering: bool?
+  mqtt_host: str?
+  mqtt_port: port?
+  mqtt_username: str?
+  mqtt_password: password?
+  mqtt_ssl: bool?
+  mqtt_base_topic: str?
+  discovery_prefix: str?
+  ingress_only: bool?
+  timezone: str?

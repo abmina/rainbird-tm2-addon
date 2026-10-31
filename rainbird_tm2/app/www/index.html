@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rain Bird</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" class="logo" aria-hidden="true"><path d="M7 21a2 2 0 0 1-2-2c0-1.1 2-4 2-4s2 2.9 2 4a2 2 0 0 1-2 2m10 0a2 2 0 0 1-2-2c0-1.1 2-4 2-4s2 2.9 2 4a2 2 0 0 1-2 2M12 13a2 2 0 0 1-2-2c0-1.1 2-4 2-4s2 2.9 2 4a2 2 0 0 1-2 2M11 2h2v3h-2zm-6.4 2.2 1.4-1.4 2.1 2.1-1.4 1.4zm11.3.7 2.1-2.1 1.4 1.4-2.1 2.1z"/></svg>
+      <div>
+        <div class="title" id="title">Rain Bird</div>
+        <div class="subtitle" id="subtitle">Connecting…</div>
+      </div>
+    </div>
+    <div class="conn" id="conn"><span class="dot"></span><span id="connText">Connecting</span></div>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="programs">Programs</button>
+    <button class="tab" data-tab="zones">Zones</button>
+    <button class="tab" data-tab="controller">Controller</button>
+    <button class="tab" data-tab="log">Log</button>
+  </nav>
+
+  <section id="setupView" class="setup" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Connect your controller</h2><button class="btn small ghost" id="btnSetupCancel" hidden>Cancel</button></div>
+      <p class="muted">The add-on talks to the Rain Bird WiFi module directly on your network. Close the Rain Bird phone app while connecting - the module only accepts one connection at a time.</p>
+      <div class="field">
+        <label>1. Find the WiFi module</label>
+        <button class="btn" id="btnDiscover">Scan network</button>
+        <div id="found" class="found"></div>
+      </div>
+      <div class="field">
+        <label for="setupHost">2. Controller IP address</label>
+        <input class="text narrow" id="setupHost" placeholder="e.g. 192.168.1.50" inputmode="decimal" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="setupPw">3. Device password</label>
+        <input class="text narrow" id="setupPw" type="password" autocomplete="new-password">
+        <div class="muted">The controller password you set in the Rain Bird app - not your WiFi or Rain Bird account password.</div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnTest">Test connection</button>
+        <button class="btn primary" id="btnConnect">Save and connect</button>
+      </div>
+      <div class="writelog" id="setupMsg" hidden></div>
+    </div>
+  </section>
+
+  <main>
+    <!-- OVERVIEW -->
+    <section id="tab-overview" class="panel active">
+      <div class="card hero" id="hero">
+        <div class="hero-main">
+          <div class="hero-label" id="heroLabel">Status</div>
+          <div class="hero-value" id="heroValue">—</div>
+          <div class="hero-sub" id="heroSub"></div>
+        </div>
+        <div class="hero-actions" id="heroActions">
+          <button class="btn" id="btnAdvance" hidden>Next zone</button>
+          <button class="btn danger" id="btnStop">Stop</button>
+        </div>
+        <div class="progress" id="progress" hidden><div id="progressBar"></div></div>
+      </div>
+
+      <div class="grid3">
+        <div class="card stat">
+          <div class="stat-label">Rain delay</div>
+          <div class="stepper">
+            <button class="icon-btn" data-delay="-1" aria-label="Decrease rain delay">−</button>
+            <div class="stat-value"><span id="rainDelay">–</span><small> days</small></div>
+            <button class="icon-btn" data-delay="1" aria-label="Increase rain delay">+</button>
+          </div>
+          <div class="stat-foot" id="rainDelayFoot">Pauses all programs</div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Rain sensor</div>
+          <div class="stat-value" id="rainSensor">–</div>
+          <div class="stat-foot" id="rainSensorFoot"></div>
+        </div>
+        <div class="card stat">
+          <div class="stat-label">Controller clock</div>
+          <div class="stat-value" id="ctrlClock">–</div>
+          <div class="stat-foot" id="ctrlDrift"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Programs</h2></div>
+        <div id="programSummary" class="list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Quick run</h2><span class="muted">Runs one zone now, outside any program</span></div>
+        <div id="quickZones" class="zone-grid"></div>
+      </div>
+    </section>
+
+    <!-- PROGRAMS -->
+    <section id="tab-programs" class="panel">
+      <div class="seg" id="progSeg"></div>
+      <div class="card" id="progEditor">
+        <div class="card-head">
+          <h2 id="progTitle">Program</h2>
+          <span class="pill" id="progDirty" hidden>Unsaved changes</span>
+        </div>
+
+        <div class="field">
+          <label>Water on</label>
+          <div class="seg small" id="freqSeg">
+            <button data-freq="custom">Days of week</button>
+            <button data-freq="odd">Odd days</button>
+            <button data-freq="even">Even days</button>
+            <button data-freq="cyclic">Every N days</button>
+          </div>
+        </div>
+        <div class="field" id="daysField">
+          <label>Days</label>
+          <div class="chips" id="dayChips"></div>
+        </div>
+        <div class="field row" id="cyclicField" hidden>
+          <label>Every <input type="number" id="cycleDays" min="1" max="14" class="num"> days</label>
+          <label>next watering in <input type="number" id="daysRemaining" min="0" max="13" class="num"> days <span class="muted">(0 = today)</span></label>
+        </div>
+        <div class="field" id="daysOffField" hidden>
+          <label>Never on</label>
+          <div class="chips" id="offChips"></div>
+        </div>
+
+        <div class="field">
+          <label>Start times</label>
+          <div class="starts" id="starts"></div>
+          <div class="muted" id="startsHint"></div>
+        </div>
+
+        <div class="field">
+          <label>Run times <span class="muted" id="runTotal"></span></label>
+          <div class="runtimes" id="runtimes"></div>
+        </div>
+
+        <div class="field">
+          <label>Seasonal adjust <strong id="seasonalVal">100%</strong></label>
+          <input type="range" id="seasonal" min="0" max="200" step="5">
+          <div class="muted">Scales every run time in this program.</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="btnSave">Save to controller</button>
+          <button class="btn" id="btnRevert">Revert</button>
+          <span class="spacer"></span>
+          <button class="btn" id="btnRunProg">Run now</button>
+          <button class="btn ghost danger" id="btnClear">Clear program</button>
+        </div>
+        <div class="writelog" id="writeLog" hidden></div>
+      </div>
+    </section>
+
+    <!-- ZONES -->
+    <section id="tab-zones" class="panel">
+      <div class="card">
+        <div class="card-head"><h2>Zones</h2><span class="muted">Names and default manual run times are stored in the add-on and used for Home Assistant entities</span></div>
+        <div id="zoneSettings" class="zone-table"></div>
+        <div class="actions"><button class="btn primary" id="btnSaveZones">Save zones</button></div>
+      </div>
+    </section>
+
+    <!-- CONTROLLER -->
+    <section id="tab-controller" class="panel">
+      <div class="card">
+        <div class="card-head"><h2>Controller settings</h2></div>
+        <div class="setting">
+          <div><div class="setting-name">Rain sensor bypass</div><div class="muted">Ignore the rain sensor and water anyway</div></div>
+          <label class="switch"><input type="checkbox" id="bypass"><span></span></label>
+        </div>
+        <div class="setting">
+          <div><div class="setting-name">Delay between zones</div><div class="muted">Pause between stations during a program</div></div>
+          <div><input type="number" id="stationDelay" min="0" max="3600" class="num"> s <button class="btn small" id="btnStationDelay">Set</button></div>
+        </div>
+        <div class="setting">
+          <div><div class="setting-name">Clock</div><div class="muted" id="clockInfo"></div></div>
+          <button class="btn" id="btnSync">Sync to Home Assistant time</button>
+        </div>
+        <div class="setting">
+          <div><div class="setting-name">Connection</div><div class="muted" id="connInfo"></div></div>
+          <button class="btn" id="btnChangeCtl">Change controller</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Device</h2><button class="btn small" id="btnRefresh">Refresh</button></div>
+        <dl class="info" id="deviceInfo"></dl>
+      </div>
+      <div class="card">
+        <div class="card-head"><h2>Diagnostics</h2><button class="btn small" id="btnScan">Scan supported commands</button></div>
+        <pre class="pre" id="diag">Run a scan to see which commands this controller answers. Takes ~15 seconds.</pre>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section id="tab-log" class="panel">
+      <div class="card">
+        <div class="card-head"><h2>Activity</h2></div>
+        <div class="log" id="log"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "rainbird-tm2-addon",
+  "version": "0.1.2",
+  "description": "Local control of a Rain Bird ESP-TM2 through its LNK WiFi module, with Home Assistant MQTT discovery and a web UI",
+  "main": "src/main.js",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node test/test-protocol.js && node test/test-addon.js && node test/test-setup.js",
+    "mock": "node test/mock-tm2.js 8443"
+  }
+}
