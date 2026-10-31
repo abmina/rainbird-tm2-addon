@@ -15,7 +15,7 @@ class Controller extends EventEmitter {
     this.cfg = cfg;
     this.store = store;
     this.log = log;
-    this.lnk = new LnkClient({ host: cfg.host, port: cfg.port || undefined, password: cfg.password, scheme: cfg.scheme || 'auto', minDelayMs: cfg.minDelayMs ?? 250, log });
+    this.lnk = new LnkClient({ host: cfg.host, port: cfg.port || undefined, password: cfg.password, scheme: cfg.scheme || 'auto', minDelayMs: cfg.minDelayMs ?? 150, log });
     this.tm2 = new Tm2(this.lnk, log);
     this.schedule = null;
     this.combinedSupported = true;
@@ -39,6 +39,7 @@ class Controller extends EventEmitter {
   stop() {
     this.running = false;
     clearTimeout(this._wake);
+    this.lnk.close();
   }
   poke(ms = 1500) {
     clearTimeout(this._wake);
@@ -109,8 +110,8 @@ class Controller extends EventEmitter {
     if (!st) {
       const [time, date, rainDelay, rainSensor, active] = [await this.tm2.getTime(), await this.tm2.getDate(), await this.tm2.getRainDelay(), await this.tm2.getRainSensor(), await this.tm2.getActiveZones()];
       st = { time, date, rainDelay, rainSensor, activeZone: active[0] || 0, remainingSeconds: null, seasonal: null };
-    } else if (st.activeZone === 0) {
-      // Some firmware reports the zone only through 0x3F; double-check while the combined state says idle.
+    } else if (st.activeZone === 0 && st.remainingSeconds > 0) {
+      // Time remaining but no zone reported - ask 0x3F which zone is running.
       const active = await this.tm2.getActiveZones().catch(() => []);
       if (active.length) st.activeZone = active[0];
     }

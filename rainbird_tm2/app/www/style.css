@@ -146,7 +146,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 16px; }
 .chips.off .chip.on { background: var(--danger); border-color: var(--danger); }
 .starts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .start { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.start input { border: 0; padding: 6px 8px; background: transparent; }
+.start input { border: 0; padding: 6px 8px; background: transparent; cursor: pointer; min-width: 120px; }
 .start button { border: 0; background: transparent; padding: 6px 8px; cursor: pointer; color: var(--muted); }
 .start button:hover { color: var(--danger); }
 .runtimes { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }

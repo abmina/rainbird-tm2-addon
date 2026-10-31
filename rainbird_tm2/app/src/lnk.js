@@ -30,7 +30,7 @@ const HEADERS = {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 class LnkClient {
-  constructor({ host, password, scheme = 'auto', port, minDelayMs = 250, timeoutMs = 10000, attempts = 5, log }) {
+  constructor({ host, password, scheme = 'auto', port, minDelayMs = 150, timeoutMs = 10000, attempts = 5, idleCloseMs = 3000, log }) {
     if (!host) throw new Error('LNK host is required');
     this.host = host;
     this.password = password;
@@ -43,7 +43,18 @@ class LnkClient {
     this._queue = Promise.resolve();
     this._lastEnd = 0;
     this._id = 0;
-    this.stats = { requests: 0, failures: 0, retries: 0, lastError: null, lastOk: null };
+    this.stats = { requests: 0, failures: 0, retries: 0, connections: 0, avgMs: 0, lastError: null, lastOk: null };
+    // One kept-alive connection, reused for bursts of requests (a TLS handshake on the module's
+    // ESP32 costs ~0.5-2 s). It is closed after `idleCloseMs` idle so the phone app can connect.
+    const agentOpts = { keepAlive: true, maxSockets: 1, maxFreeSockets: 1, timeout: idleCloseMs };
+    this.agents = { https: new https.Agent({ ...agentOpts, rejectUnauthorized: false }), http: new http.Agent(agentOpts) };
+    for (const a of Object.values(this.agents)) {
+      a.on('free', (sock) => { sock.setTimeout(idleCloseMs, () => sock.destroy()); });
+    }
+  }
+
+  close() {
+    for (const a of Object.values(this.agents)) a.destroy();
   }
 
   /** Queue a JSON-RPC call. Resolves with `result`, rejects with LnkError. */
@@ -77,10 +88,12 @@ class LnkClient {
           throw e;
         }
         this.stats.retries++;
-        const wait = delay + Math.floor(Math.random() * 400);
+        // A kept-alive connection the module dropped: retry at once on a fresh connection.
+        const stale = attempt === 1 && (e.code === 'ECONNRESET' || e.code === 'EPIPE');
+        const wait = stale ? 0 : delay + Math.floor(Math.random() * 400);
         this.log.debug(`LNK ${method} attempt ${attempt} failed (${e.message}); retrying in ${wait}ms`);
         await sleep(wait);
-        delay = Math.min(delay * 2, 8000);
+        if (!stale) delay = Math.min(delay * 2, 8000);
       }
     }
   }
@@ -123,11 +136,12 @@ class LnkClient {
       port: this.port || (scheme === 'https' ? 443 : 80),
       path: '/stick',
       method: 'POST',
-      headers: { ...HEADERS, 'Content-Length': body.length },
-      agent: false, // never hold the module's single connection open
+      headers: { ...HEADERS, Connection: 'keep-alive', 'Content-Length': body.length },
+      agent: this.agents[scheme],
       timeout: this.timeoutMs,
     };
     if (scheme === 'https') opts.rejectUnauthorized = false; // self-signed, LAN-only, addressed by IP
+    const started = Date.now();
 
     return new Promise((resolve, reject) => {
       const req = mod.request(opts, (res) => {
@@ -135,6 +149,8 @@ class LnkClient {
         res.on('data', (c) => chunks.push(c));
         res.on('end', () => {
           this.stats.requests++;
+          const ms = Date.now() - started;
+          this.stats.avgMs = Math.round(this.stats.avgMs ? this.stats.avgMs * 0.8 + ms * 0.2 : ms);
           const buf = Buffer.concat(chunks);
           if (res.statusCode === 503) return reject(new LnkError('Module busy (HTTP 503)', { code: 503, retryable: true }));
           if (res.statusCode === 403) return reject(new LnkError('Module rejected the password (HTTP 403)', { code: 403, auth: true }));
@@ -162,6 +178,7 @@ class LnkClient {
         });
         res.on('error', (e) => reject(Object.assign(e, { retryable: true })));
       });
+      req.on('socket', (sock) => { if (!sock._rbCounted) { sock._rbCounted = true; this.stats.connections++; } });
       req.on('timeout', () => req.destroy(Object.assign(new Error(`Timed out after ${this.timeoutMs}ms`), { code: 'ETIMEDOUT' })));
       req.on('error', (e) => {
         const retryable = ['ECONNRESET', 'ETIMEDOUT', 'EPIPE', 'EHOSTUNREACH', 'ECONNREFUSED', 'ENETUNREACH', 'EAI_AGAIN'].includes(e.code);

@@ -55,6 +55,8 @@ const fmtWhen = (iso) => {
   return `${d.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} ${time}`;
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
+// True only while the user is typing in an input inside el - buttons keeping focus after a click don't count.
+const editingIn = (el) => document.activeElement && document.activeElement.tagName === 'INPUT' && el.contains(document.activeElement);
 const programOf = (name) => S && S.schedule && S.schedule.programs.find((p) => p.name === name);
 
 // ------------------------------------------------------------------ tabs
@@ -82,7 +84,7 @@ function render() {
   renderQuickZones();
   renderProgramSeg();
   if (!drafts[current]) renderEditor();
-  if (!zonesRendered || !$('tab-zones').contains(document.activeElement)) renderZoneSettings();
+  if (!zonesRendered || !editingIn($('tab-zones'))) renderZoneSettings();
   renderController();
 }
 
@@ -165,7 +167,7 @@ function renderProgramSummary() {
 
 function renderQuickZones() {
   const el = $('quickZones');
-  const focused = el.contains(document.activeElement) ? document.activeElement.dataset.z : null;
+  const focused = editingIn(el) ? document.activeElement.dataset.z : null;
   if (focused) {
     // just update active highlighting while the user is typing
     el.querySelectorAll('.zone').forEach((z) => z.classList.toggle('active', S.status.activeZone === Number(z.dataset.zone)));
@@ -187,20 +189,20 @@ function renderProgramSeg() {
 function draft() {
   return drafts[current] || clone(programOf(current) || {});
 }
-function setDraft(d) {
+function setDraft(d, opts = {}) {
   const orig = programOf(current);
   const same = JSON.stringify(normalize(d)) === JSON.stringify(normalize(orig));
   if (same) delete drafts[current]; else drafts[current] = d;
   $('progDirty').hidden = same;
   renderProgramSeg();
-  renderEditor(d);
+  renderEditor(d, opts);
 }
 function normalize(p) {
   if (!p) return null;
   return { frequency: p.frequency, days: [...p.days].sort(), cycleDays: p.cycleDays, daysRemaining: p.daysRemaining, daysOff: [...p.daysOff].sort(), seasonal: p.seasonal, starts: [...p.starts].sort(), runTimes: p.runTimes };
 }
 
-function renderEditor(d = draft()) {
+function renderEditor(d = draft(), opts = {}) {
   if (!S.schedule || !d.name) { $('progTitle').textContent = 'Reading schedule…'; return; }
   $('progTitle').textContent = `Program ${d.name}`;
   const saved = programOf(current);
@@ -225,14 +227,14 @@ function renderEditor(d = draft()) {
 
   const slots = d.startSlots || 4;
   const st = $('starts');
-  if (!st.contains(document.activeElement)) {
+  if (!opts.keepStarts && !editingIn(st)) {
     st.innerHTML = d.starts.map((t, i) => `<div class="start"><input type="time" value="${t}" data-start="${i}"><button data-rmstart="${i}" title="Remove">✕</button></div>`).join('')
       + (d.starts.length < slots ? `<button class="btn small" id="addStart">+ Add start time</button>` : '');
   }
   $('startsHint').textContent = d.starts.length ? `${d.starts.length} of ${slots} start times. Each start runs every zone below in order.` : 'No start times - this program will not run on its own.';
 
   const rt = $('runtimes');
-  if (!rt.contains(document.activeElement)) {
+  if (!editingIn(rt)) {
     rt.innerHTML = S.zones.map((z) => {
       const m = d.runTimes[z.zone] || 0;
       return `<div class="rt ${m ? '' : 'zero'}"><span class="rt-name">${esc(z.name)}</span><span><input type="number" class="num" min="0" max="360" value="${m}" data-rt="${z.zone}"> min</span></div>`;
@@ -296,12 +298,21 @@ $('starts').addEventListener('click', (e) => {
   const rm = e.target.closest('[data-rmstart]');
   if (rm) { d.starts.splice(Number(rm.dataset.rmstart), 1); document.activeElement.blur(); setDraft(d); }
 });
+// Clicking anywhere on a start time opens the browser's time picker (not just the clock icon).
+$('starts').addEventListener('click', (e) => {
+  const input = e.target.closest('input[type=time]');
+  if (input && typeof input.showPicker === 'function') {
+    try { input.showPicker(); } catch {}
+  }
+});
+// Record the new time while the user is still editing (hour, then minutes, then AM/PM).
+// The time fields themselves are left alone - redrawing them would throw the user out of the
+// field (Chrome briefly reports no focus between the hour and minute parts).
 $('starts').addEventListener('change', (e) => {
   if (!e.target.dataset.start) return;
   const d = draft();
   if (e.target.value) d.starts[Number(e.target.dataset.start)] = e.target.value;
-  e.target.blur();
-  setDraft(d);
+  setDraft(d, { keepStarts: true });
 });
 $('runtimes').addEventListener('change', (e) => {
   if (!e.target.dataset.rt) return;
@@ -395,7 +406,7 @@ function renderController() {
     ['Model', `${i.model} (${i.modelId}) · protocol ${i.protocol}`],
     ['Firmware', i.firmware], ['Serial', i.serial], ['Zones', (i.zones || []).join(', ')],
     ['WiFi module', w.stickVersion || w.sick_version || '—'], ['Signal', w.rssi != null ? `${w.rssi} dBm` : '—'],
-    ['MAC', w.macAddress || w.mac_address || '—'], ['Transport', `${(S.connection.scheme || '').toUpperCase()} · ${S.connection.stats ? S.connection.stats.requests : 0} requests, ${S.connection.stats ? S.connection.stats.retries : 0} retries`],
+    ['MAC', w.macAddress || w.mac_address || '—'], ['Transport', (() => { const t = S.connection.stats || {}; return `${(S.connection.scheme || '').toUpperCase()} · ${t.requests || 0} requests over ${t.connections || 0} connections · avg ${t.avgMs || 0} ms · ${t.retries || 0} retries`; })()],
     ['Last error', S.connection.lastError || '—'], ['Schedule read', S.schedule && S.schedule.readAt ? new Date(S.schedule.readAt).toLocaleString() : '—'],
   ];
   $('deviceInfo').innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v ?? '—')}</dd>`).join('');

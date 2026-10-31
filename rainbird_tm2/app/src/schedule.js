@@ -180,36 +180,47 @@ class ScheduleManager {
 
   // ------------------------------------------------------------------ verified writes
   /**
-   * Write changed pages one at a time. After each write all pages are re-read and
-   * compared to what we expect; if anything else moved, the target page is restored
-   * and the write is aborted. Returns a log of what happened.
+   * Write changed pages one at a time, reading each one back right after writing it.
+   * Then read every schedule page once and check that the written pages kept their new value
+   * and nothing else moved. On any mismatch all written pages are restored and an error is thrown.
+   * Cost: one full read before, 2 requests per changed page, one full read after.
    */
   async apply(changes, label = 'schedule') {
     const log = [];
     const keys = Object.keys(changes).map(Number);
     if (!keys.length) return { log: [`${label}: no changes`], schedule: this.decode() };
     const fresh = this.pages && this.readAt && Date.now() - this.readAt.getTime() < 5000;
-    let before = fresh ? { ...this.pages } : await this.readPages();
+    const before = fresh ? { ...this.pages } : await this.readPages();
+    const written = [];
+    const rollback = async (why) => {
+      this.log.warn(`${label}: ${why}; restoring ${written.map((p) => hex(p, 4)).join(', ') || 'nothing'}`);
+      for (const p of written.slice().reverse()) {
+        try { await this.tm2.writePage(p, before[p]); } catch (e) { this.log.warn(`Restore of ${hex(p, 4)} failed: ${e.message}`); }
+      }
+      this.pages = await this.readPages();
+      this.readAt = new Date();
+    };
     for (const page of keys) {
       const body = changes[page];
       if (before[page] === body) continue;
       if (body.length !== before[page].length) throw new Error(`Encoded page ${hex(page, 4)} has the wrong length`);
       await this.tm2.writePage(page, body);
-      const after = await this.readPages();
-      const expected = { ...before, [page]: body };
-      const bad = this.layout.pages.filter((p) => after[p] !== expected[p]);
-      if (bad.length) {
-        this.log.warn(`${label}: verification failed on page(s) ${bad.map((p) => hex(p, 4)).join(', ')}; restoring ${hex(page, 4)}`);
-        if (after[page] !== before[page]) {
-          try { await this.tm2.writePage(page, before[page]); } catch (e) { this.log.warn(`Restore failed: ${e.message}`); }
-        }
-        this.pages = await this.readPages();
+      written.push(page);
+      const back = await this.tm2.readPage(page);
+      if (back !== body) {
+        await rollback(`page ${hex(page, 4)} read back as ${back}, expected ${body}`);
         throw new Error(`Write verification failed for page ${hex(page, 4)} - change was rolled back`);
       }
       log.push(`page ${hex(page, 4)} written and verified`);
-      before = after;
     }
-    this.pages = before;
+    const after = await this.readPages();
+    const expected = { ...before, ...Object.fromEntries(written.map((p) => [p, changes[p]])) };
+    const bad = this.layout.pages.filter((p) => after[p] !== expected[p]);
+    if (bad.length) {
+      await rollback(`final check found unexpected content on page(s) ${bad.map((p) => hex(p, 4)).join(', ')}`);
+      throw new Error(`Write verification failed (page ${bad.map((p) => hex(p, 4)).join(', ')}) - change was rolled back`);
+    }
+    this.pages = after;
     this.readAt = new Date();
     this.log.info(`${label}: ${log.length} page(s) written and verified`);
     return { log, schedule: this.decode() };

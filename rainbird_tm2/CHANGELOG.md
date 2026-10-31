@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.4
+- Much faster: one HTTPS connection is reused for bursts of requests instead of a new TLS
+  handshake per request (closed after 3 s idle so the Rain Bird app can still connect).
+- Faster verified schedule writes: each page is read back right after writing, then one final
+  full check (28 requests for a typical program save instead of 54). Still rolls back on mismatch.
+- Lighter status polling; default request spacing 150 ms.
+- Fix: "+ Add start time" (and removing one) now updates the program editor immediately.
+- Fix: clicking a start time opens the time picker, and editing hour/minutes/AM-PM no longer
+  kicks you out of the field after the first part.
+- Controller tab shows connections and average request time.
+
 ## 0.1.3
 - Fix: next-run times were an hour off across a daylight saving change.
 - The ESP-TM2 has no DST support; after a DST change the controller clock is now moved

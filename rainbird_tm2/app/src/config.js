@@ -67,7 +67,7 @@ async function loadConfig(log) {
     defaultRunMinutes: Number(o.default_run_minutes ?? 10),
     autoSyncClock: o.auto_sync_clock ?? true,
     allowWritesWhileWatering: !!o.allow_writes_while_watering,
-    minDelayMs: Number(o.request_spacing_ms ?? env.REQUEST_SPACING_MS ?? 250),
+    minDelayMs: Number(o.request_spacing_ms ?? env.REQUEST_SPACING_MS ?? 150),
     deviceName: o.device_name || 'Rain Bird',
     baseTopic: o.mqtt_base_topic || 'rainbird_tm2',
     discoveryPrefix: o.discovery_prefix || 'homeassistant',
