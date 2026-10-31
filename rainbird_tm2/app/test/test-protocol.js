@@ -132,6 +132,49 @@ async function main() {
     assert.equal(wallToEpoch({ year: 2026, month: 12, day: 1, hour: 6, minute: 0 }, 'America/Chicago'), Date.UTC(2026, 11, 1, 12, 0));
     assert.equal(wallParts(Date.UTC(2026, 6, 1, 12), 'Asia/Kolkata').minute, 30);
 
+    // ---- the user's report: cyclic every 3 days, watered today at 03:00, DST ends Sun Nov 1 2026
+    {
+      const { Controller } = require('../src/controller');
+      const { Store } = require('../src/store');
+      const os = require('os'); const fsx = require('fs'); const px = require('path');
+      const ctl = new Controller({ host: 'x', password: 'x', timezone: 'America/Chicago', timezoneSource: 'Home Assistant', autoSyncClock: true }, new Store(fsx.mkdtempSync(px.join(os.tmpdir(), 'rbst-'))), quiet);
+      const realNow = Date.now;
+      const now = Date.UTC(2026, 9, 31, 1, 18); // Fri Oct 30 20:18 CDT
+      Date.now = () => now;
+      try {
+        ctl.state.status = { clockDriftSeconds: 0, rainDelay: 0 };
+        ctl._ctrlWall = { utc: Date.UTC(2026, 9, 30, 20, 18), at: now };
+        ctl.state.schedule = { programs: [{ name: 'A', frequency: 'cyclic', cycleDays: 3, daysRemaining: 0, days: [], daysOff: [], seasonal: 100, starts: ['03:00'], runTimes: { 1: 2, 2: 7 } }] };
+        ctl._updateNextRun();
+        assert.equal(ctl.state.nextRun.at, '2026-11-02T09:00:00.000Z', 'Mon Nov 2 03:00 CST, not 02:00');
+        assert.equal(ctl.state.schedule.programs[0].nextRun, '2026-11-02T09:00:00.000Z');
+        // controller 5h ahead (set to UTC): it starts at its 03:00, i.e. 5h earlier in real time
+        ctl.state.status.clockDriftSeconds = 5 * 3600;
+        ctl._updateNextRun();
+        assert.equal(ctl.state.nextRun.at, '2026-11-02T04:00:00.000Z');
+
+        // DST: Mon Nov 2 12:00 CST, controller still on CDT -> 1 h ahead -> synced automatically
+        const after = Date.UTC(2026, 10, 2, 18, 0);
+        Date.now = () => after;
+        let synced = 0;
+        ctl.syncClock = async () => { synced++; };
+        ctl.state.status.clockDriftSeconds = 3600;
+        await ctl._maybeSyncClock();
+        assert.equal(synced, 1, 'DST shift is synced');
+        // ...but a 5 h difference (time zone mismatch) still is not
+        ctl.state.status.clockDriftSeconds = 5 * 3600;
+        await ctl._maybeSyncClock();
+        assert.equal(synced, 1, 'time zone mismatch is not auto-synced');
+        // ...and a 1 h difference outside a DST week is not either
+        Date.now = () => Date.UTC(2026, 11, 15, 18, 0);
+        ctl.state.status.clockDriftSeconds = 3600;
+        await ctl._maybeSyncClock();
+        assert.equal(synced, 1);
+      } finally {
+        Date.now = realNow;
+      }
+    }
+
     // wrong password
     const bad = new Tm2(new LnkClient({ host: '127.0.0.1', port, password: 'nope', minDelayMs: 5, attempts: 1, log: quiet }));
     await assert.rejects(() => bad.getModel(), /password/);

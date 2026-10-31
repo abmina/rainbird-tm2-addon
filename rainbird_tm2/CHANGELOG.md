@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3
+- Fix: next-run times were an hour off across a daylight saving change.
+- The ESP-TM2 has no DST support; after a DST change the controller clock is now moved
+  forward/back automatically (only for exactly the DST shift).
+- Program editor shows each program's next run, and explains the "every N days" counter
+  (0 means today is a watering day, even if today's start has already passed).
+- MQTT: program attributes include `next_run`.
+
 ## 0.1.2
 - Fix: the add-on now receives the Supervisor token and time zone (start script uses `with-contenv`),
   so MQTT and the Home Assistant time zone are picked up automatically.

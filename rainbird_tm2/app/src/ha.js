@@ -159,7 +159,7 @@ class HaBridge {
     const programs = {};
     if (s.schedule) {
       for (const p of s.schedule.programs) {
-        programs[p.name] = { summary: p.summary, frequency: p.frequency, days: p.days, cycle_days: p.cycleDays, days_off: p.daysOff, seasonal: p.seasonal, starts: p.starts, run_times: p.runTimes };
+        programs[p.name] = { summary: p.summary, next_run: p.nextRun || null, frequency: p.frequency, days: p.days, cycle_days: p.cycleDays, days_off: p.daysOff, seasonal: p.seasonal, starts: p.starts, run_times: p.runTimes };
       }
     }
     const payload = {

@@ -203,6 +203,15 @@ function normalize(p) {
 function renderEditor(d = draft()) {
   if (!S.schedule || !d.name) { $('progTitle').textContent = 'Reading schedule…'; return; }
   $('progTitle').textContent = `Program ${d.name}`;
+  const saved = programOf(current);
+  $('progNext').textContent = drafts[current] ? 'Next run will be recalculated after saving.'
+    : saved && saved.nextRun ? `Next run: ${fmtWhen(saved.nextRun)}` : saved && saved.summary === 'Not scheduled' ? '' : 'No upcoming run in the next 60 days.';
+  if (d.frequency === 'cyclic' && !drafts[current] && saved && saved.nextRun) {
+    const days = Math.round((new Date(saved.nextRun).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000);
+    $('remainingHint').textContent = d.daysRemaining === 0 && days > 0
+      ? `(0 = today is a watering day - today's start has passed, so the next run is in ${days} day${days === 1 ? '' : 's'})`
+      : '(0 = today is a watering day)';
+  } else $('remainingHint').textContent = '(0 = today is a watering day)';
   $('progDirty').hidden = !drafts[current];
   document.querySelectorAll('#freqSeg button').forEach((b) => b.classList.toggle('active', b.dataset.freq === d.frequency));
   $('daysField').hidden = d.frequency !== 'custom';

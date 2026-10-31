@@ -4,7 +4,7 @@ const { EventEmitter } = require('events');
 const { LnkClient } = require('./lnk');
 const { Tm2, NackError } = require('./tm2');
 const { ScheduleManager, nextRun, describeProgram, PROGRAM_NAMES } = require('./schedule');
-const { wallParts, wallToEpoch } = require('./time');
+const { wallParts, wallToEpoch, offsetMs } = require('./time');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pad = (n) => String(n).padStart(2, '0');
@@ -158,19 +158,34 @@ class Controller extends EventEmitter {
     const s = this.state.schedule;
     const st = this.state.status;
     if (!s || !st) return;
-    // Work in the controller's own wall-clock time, then map back to a real instant:
-    // the run happens (at - nowOnController) from now, whatever the controller's clock says.
+    // Work in the controller's own wall-clock time (encoded as UTC), then convert the start to a
+    // real instant through the time zone - so DST changes are handled - and correct for the
+    // controller's clock error (drift), since it starts programs by its own clock.
     const elapsed = Date.now() - this._ctrlWall.at;
     const nowWall = new Date(this._ctrlWall.utc + elapsed);
+    const toInstant = (w) => new Date(wallToEpoch({ year: w.getUTCFullYear(), month: w.getUTCMonth() + 1, day: w.getUTCDate(), hour: w.getUTCHours(), minute: w.getUTCMinutes() }, this.cfg.timezone) - st.clockDriftSeconds * 1000).toISOString();
     const nr = nextRun(s, nowWall, { rainDelay: st.rainDelay });
-    this.state.nextRun = nr ? { program: nr.program, at: new Date(Date.now() + (nr.at - nowWall)).toISOString(), minutes: nr.minutes } : null;
+    this.state.nextRun = nr ? { program: nr.program, at: toInstant(nr.at), minutes: nr.minutes } : null;
+    for (const p of s.programs) {
+      const pr = nextRun({ programs: [p] }, nowWall, { rainDelay: st.rainDelay });
+      p.nextRun = pr ? toInstant(pr.at) : null;
+    }
   }
 
   async _maybeSyncClock() {
     if (!this.cfg.autoSyncClock || !this.state.status || this.cfg.timezoneSource === 'fallback') return;
     const drift = this.state.status.clockDriftSeconds;
     if (Math.abs(drift) < 90) return;
-    if (Date.now() - this.lastClockSync < 6 * 3600 * 1000) return;
+    // The ESP-TM2 has no daylight saving support: right after a DST change it is off by exactly
+    // the shift. That is expected and safe to correct.
+    const now = Date.now();
+    const shift = (offsetMs(now, this.cfg.timezone) - offsetMs(now - 7 * 86400000, this.cfg.timezone)) / 1000;
+    if (shift && Math.abs(drift + shift) < 120) {
+      this.log.info(`Daylight saving time change in ${this.cfg.timezone} - moving the controller clock ${shift > 0 ? 'forward' : 'back'} ${Math.abs(shift) / 3600} h`);
+      await this.syncClock();
+      return;
+    }
+    if (now - this.lastClockSync < 6 * 3600 * 1000) return;
     // A difference of whole hours (or half hours) is far more likely a time zone mismatch than
     // clock drift. Never "fix" that automatically - ask the user to check and use Sync clock.
     const r = Math.abs(drift) % 1800;

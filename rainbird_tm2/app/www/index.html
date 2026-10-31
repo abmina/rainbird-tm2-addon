@@ -109,6 +109,7 @@
           <h2 id="progTitle">Program</h2>
           <span class="pill" id="progDirty" hidden>Unsaved changes</span>
         </div>
+        <div class="muted" id="progNext"></div>
 
         <div class="field">
           <label>Water on</label>
@@ -125,7 +126,7 @@
         </div>
         <div class="field row" id="cyclicField" hidden>
           <label>Every <input type="number" id="cycleDays" min="1" max="14" class="num"> days</label>
-          <label>next watering in <input type="number" id="daysRemaining" min="0" max="13" class="num"> days <span class="muted">(0 = today)</span></label>
+          <label>next watering day in <input type="number" id="daysRemaining" min="0" max="13" class="num"> days <span class="muted" id="remainingHint">(0 = today is a watering day)</span></label>
         </div>
         <div class="field" id="daysOffField" hidden>
           <label>Never on</label>

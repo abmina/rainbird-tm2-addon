@@ -21,6 +21,12 @@ function wallParts(epochMs, tz) {
   return { year: +p.year, month: +p.month, day: +p.day, hour: +p.hour % 24, minute: +p.minute, second: +p.second };
 }
 
+/** UTC offset of a time zone at an instant, in ms (e.g. -5h for CDT). */
+function offsetMs(epochMs, tz) {
+  const w = wallParts(epochMs, tz);
+  return Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute, w.second) - Math.floor(epochMs / 1000) * 1000;
+}
+
 /** Instant for a wall-clock time in a time zone (handles DST by iterating). */
 function wallToEpoch({ year, month, day, hour, minute, second = 0 }, tz) {
   const target = Date.UTC(year, month - 1, day, hour, minute, second);
@@ -68,4 +74,4 @@ async function resolveTimezone(option, log) {
   return { tz: 'UTC', source: 'fallback' };
 }
 
-module.exports = { wallParts, wallToEpoch, resolveTimezone, isValidZone };
+module.exports = { wallParts, wallToEpoch, offsetMs, resolveTimezone, isValidZone };
