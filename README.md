@@ -48,7 +48,7 @@ programs. This Home Assistant app talks directly to the controller's WiFi module
 | TM2R / TRU | `0014`, `0015` | 🟡 Same protocol - not yet tested |
 | ESP-RZXe, ST8x-WiFi | `0003`, `0006`, `0008` | ❌ Different (per-zone) scheduling - not supported yet |
 
-Needs the Rain Bird **LNK, LNK2 or LNK3** WiFi module plugged into the controller, and Home Assistant
+Needs the Rain Bird **LNK or LNK2** WiFi module plugged into the controller, and Home Assistant
 **OS or Supervised** (anything with the Apps page).
 
 **Have a 🟡 controller?** Please [report how it went](https://github.com/abmina/rainbird-tm2-addon/issues/new?template=device_report.yml) -
