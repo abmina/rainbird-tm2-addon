@@ -1,7 +1,7 @@
 # Rain Bird ESP-TM2 for Home Assistant (local)
 
 **Full local control of Rain Bird ESP-TM2 sprinkler controllers - no Rain Bird cloud, no phone app, no waiting.**
-A Home Assistant app with its own sidebar page (like Zigbee2MQTT) that lets you edit your watering
+A Home Assistant app with its own sidebar page that lets you edit your watering
 programs, and MQTT entities for your dashboards and automations.
 
 [![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?app=d2c74719_rainbird_tm2&repository_url=https%3A%2F%2Fgithub.com%2Fabmina%2Frainbird-tm2-addon)
